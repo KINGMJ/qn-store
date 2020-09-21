@@ -19,6 +19,13 @@ In order to replace the storage module, the basic requirements are:
   git clone https://github.com/KINGMJ/qn-store
   ```
 
+- Install dependencies
+
+  ```
+  cd qn-store
+  npm install
+  ```
+
 ## Configuration
 
 In your `config.[env].json` file, you'll need to add a new `storage` block to whichever environment you want to change:
