@@ -1,47 +1,27 @@
 /**
- * Qiniu storage module for Ghost blog 1.x
- * @see https://docs.ghost.org/v1.0.0/docs/using-a-custom-storage-module
+ * Qiniu storage module for Ghost blog 3.x
+ * @see https://ghost.org/docs/concepts/storage-adapters/
  */
 
 'use strict';
 
 const path = require('path');
 const fs = require('fs');
-const util = require('util');
 const urlParse = require('url').parse;
 const Promise = require('bluebird');
 const moment = require('moment');
 const qn = require('qn');
-const StorageBase = require('ghost-storage-base');
-
-const cwd = process.cwd();
-let ghostRoot;
-
-if (fs.existsSync(path.join(cwd, 'core'))) {
-  ghostRoot = cwd;
-} else if (fs.existsSync(path.join(cwd, 'current'))) {
-  // installed via ghost cli
-  ghostRoot = path.join(cwd, 'current');
-}
-
-if (!ghostRoot) {
-  throw new Error('Can not get ghost root path!');
-}
-
-const config = require(path.join(ghostRoot, 'core/server/config'));
-const security = require(path.join(ghostRoot, 'core/server/lib/security'));
-const errors = require(path.join(ghostRoot, 'core/server/lib/common/errors'));
-const i18n = require(path.join(ghostRoot, 'core/server/lib/common/i18n'));
+const BaseAdapter = require('ghost-storage-base');
 const getHash = require('./lib/getHash');
+
 const logPrefix = '[QiniuStore]';
 
-class QiniuStore extends StorageBase {
+class QiniuStore extends BaseAdapter {
   constructor(options) {
     super(options);
 
     this.options = options || {};
     this.client = qn.create(this.options);
-    this.storagePath = config.getContentPath('images');
   }
 
   /**
@@ -136,12 +116,8 @@ class QiniuStore extends StorageBase {
     return new Promise(function(resolve, reject) {
       client.download(key, function(err, content, res) {
         if (err) {
-          return reject(new errors.GhostError({
-            err: err,
-            message: `${logPrefix} Could not read image: ${options.path}`,
-          }));
+          return reject(`${logPrefix} Could not read image: ${options.path}`);
         }
-
         resolve(content);
       });
     });
@@ -182,10 +158,7 @@ class QiniuStore extends StorageBase {
         return getHash(file).then(function(hash) {
           return contactKey(hash);
         });
-      } else if (keyOptions.safeString) {
-        basename = security.string.safe(basename);
       }
-
       fileKey = contactKey(basename);
     }
 
